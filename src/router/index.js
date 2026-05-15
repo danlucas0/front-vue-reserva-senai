@@ -15,56 +15,58 @@ import MinhasReservasPage from "../pages/professor/MinhasReservasPage.vue";
 import NovaReservaPage from "../pages/professor/NovaReservaPage.vue";
 import SalasDisponiveisPage from "../pages/professor/SalasDisponiveisPage.vue";
 
-const routes = [
-  { path: "/", redirect: "/login" },
-
-  { path: "/login", component: LoginPage },
-
-  {
-    path: "/trocar-senha",
-    component: TrocarSenhaPage,
-    meta: { auth: true },
-  },
-
-  {
-    path: "/admin",
-    component: AdminLayout,
-    meta: { auth: true, role: "ADMIN" },
-    children: [
-      { path: "dashboard", component: AdminDashboard },
-      { path: "usuarios", component: UsuariosPage },
-      { path: "salas", component: SalasPage },
-      { path: "reservas", component: ReservasPage },
-    ],
-  },
-
-  {
-    path: "/professor",
-    component: ProfessorLayout,
-    meta: { auth: true, role: "PROFESSOR" },
-    children: [
-      { path: "minhas-reservas", component: MinhasReservasPage },
-      { path: "nova-reserva", component: NovaReservaPage },
-      { path: "salas-disponiveis", component: SalasDisponiveisPage },
-    ],
-  },
-];
-
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes: [
+    { path: "/", redirect: "/login" },
+
+    { path: "/login", component: LoginPage },
+    { path: "/trocar-senha", component: TrocarSenhaPage },
+
+    {
+      path: "/admin",
+      component: AdminLayout,
+      meta: { role: "ADMIN" },
+      children: [
+        { path: "", redirect: "/admin/dashboard" },
+        { path: "dashboard", component: AdminDashboard },
+        { path: "usuarios", component: UsuariosPage },
+        { path: "salas", component: SalasPage },
+        { path: "reservas", component: ReservasPage },
+      ],
+    },
+
+    {
+      path: "/professor",
+      component: ProfessorLayout,
+      meta: { role: "PROFESSOR" },
+      children: [
+        { path: "", redirect: "/professor/minhas-reservas" },
+        { path: "minhas-reservas", component: MinhasReservasPage },
+        { path: "nova-reserva", component: NovaReservaPage },
+        { path: "salas", component: SalasDisponiveisPage },
+      ],
+    },
+  ],
 });
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem("token");
   const role = localStorage.getItem("role");
 
-  if (to.meta.auth && !token) {
-    return next("/login");
+  if (to.path === "/login") {
+    next();
+    return;
   }
 
-  if (to.meta.role && role !== to.meta.role) {
-    return next("/login");
+  if (!token) {
+    next("/login");
+    return;
+  }
+
+  if (to.meta.role && to.meta.role !== role) {
+    next("/login");
+    return;
   }
 
   next();
